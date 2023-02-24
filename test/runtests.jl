@@ -5,4 +5,4 @@ using Test
 
 include("myWord.jl")
 include("presentation.jl")
-include("rewriting.jl")
+include("rewriting.jl")   

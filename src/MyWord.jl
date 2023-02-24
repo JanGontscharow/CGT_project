@@ -19,32 +19,49 @@ Base.push!(w::MyWord, l::Int) = push!(w.letters, l)
 Base.resize!(w::MyWord, n) = resize!(w.letters, n)
 Base.popfirst!(w::MyWord) = popfirst!(w.letters)
 Base.prepend!(w::MyWord, v::MyWord) = prepend!(w.letters, v)
-
-# LenLex(a < a^-1 < b < b^-1 < ...) 
-function lt(w::MyWord, v::MyWord)
-    if length(w) == length(v)
-        for i in 1:length(w)
-            if !(abs(w[i]) == abs(v[i]))
-                return abs(w[i]) < abs(v[i])
-            elseif !(w[i] == v[i])
-                return w[i] > v[i]
-            end
+Base.copy(w::MyWord) = one(w) * w
+issuffix(v::MyWord, w::MyWord) = v ∈ suffixes(w)
+isprefix(v::MyWord, w::MyWord) = v ∈ prefixes(w)
+suffixes(w::MyWord) = (MyWord(w[i:end]) for i in firstindex(w):lastindex(w))
+prefixes(w::MyWord) = (MyWord(w[begin:i]) for i in firstindex(w):lastindex(w))
+function proper_subwords(w::MyWord)
+    subwords = []
+    for i in 1:length(w)
+        for j in i:length(w)
+            push!(subwords, w[i:j])
         end
-        return false
-    else
-        return length(w)<length(v)
     end
+    # full word appears at iteration: length(w)
+    splice!(subwords, length(w))
+    # remove duplicates
+    unique!(subwords)
+    # make them into words
+    subwords = map(v -> MyWord(v), subwords)
+    return subwords
 end
 
+# LenLex(a < a^-1 < b < b^-1 ...)
+function lt(v::MyWord, w::MyWord)
+    if length(v) != length(w)
+        return length(v)<length(w)
+    end
+    for i in 1:length(w)
+        if abs(v[i]) != abs(w[i])
+            return abs(v[i]) < abs(w[i])
+        elseif v[i] != w[i]
+            # inverses are larger
+            return v[i] > w[i]
+        end
+    end
+    # words are equal
+    return false
+end
+
+# group-theoretic behaviour
 function Base.:*(w::MyWord, v::MyWord)
     return append!(one(w), w, v)
 end
-
-Base.copy(w::MyWord) = one(w) * w
-
-# non destructive inversion
-Base.inv(w::MyWord) = -reverse(w)
-
+Base.inv(w::MyWord) = MyWord(-reverse(w))
 degree(w::MyWord) = maximum(abs.(w.letters))
 
 function run_decomposition(w::MyWord)
