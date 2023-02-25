@@ -1,7 +1,12 @@
-# We want our Alphabet to have an infinite supply of distinct letters --> Integers as Alphabet
-# We want a word 
-struct MyWord <: AbstractVector{Int64}
-    letters::Vector{Int64}
+# I want a common Alphabet for every word which has an infinite supply of letters --> Integers as Alphabet
+# Inverse of a letter l is realized as -l
+struct MyWord <: AbstractVector{Int}
+    letters::Vector{Int}
+    
+    MyWord() = new(Vector{Int}())
+    function MyWord(vec::Vector{Int})
+        new(vec)
+    end
 end
 
 # Implement AbstractVector interface
@@ -11,7 +16,7 @@ Base.setindex!(w::MyWord, x, i) = w.letters[i] = x
 Base.size(w::MyWord) = (length(w),)
 
 # empty word
-Base.one(w::MyWord) = MyWord(Vector{Int64}())
+Base.one(w::MyWord) = MyWord()
 Base.isone(w::MyWord) = iszero(length(w))
 
 # for rewriting
