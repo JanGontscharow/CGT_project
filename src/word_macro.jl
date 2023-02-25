@@ -2,8 +2,6 @@
 """
     word"..."
 
-String macro to parse.
-
 # Examples:
 ```jldoctest
 julia> w = word"ab^2c^-2c^-1"
@@ -16,29 +14,35 @@ julia> degree(p)
 3
 ```
 """
-
-macro word_str(str::String)
+function parse_syllables(str::AbstractString)
     # match letter with opotional exponent
     pattern = r"([a-z])(\^\-?\d+)?"
-    matches = eachmatch(pattern, str)
+    return eachmatch(pattern, str)
+end
 
-    # extract exponents
-    exponents = Vector{Int}()
-    exp = nothing
-    for match in matches
-        if !isnothing(match[2])
-            exp = parse(Int, match[2][2:end])
-        else
-            exp = 1
-        end
-        push!(exponents, exp)
+function parse_pairs(syllables)
+    pairs = []
+    for syllable in syllables
+        gen, exp = syllable.captures
+        exp = isnothing(exp) ? 1 : parse(Int, exp[2:end])
+        gen = char_to_int(gen[1])
+        iszero(exp) || push!(pairs, (gen, exp))
     end
+    return pairs
+end
 
-    # apply exponents
-    ints = [char_to_int(l) for l in str if isletter(l)]
-    pairs = zip(ints, exponents)
-    segments = [repeat([sign(e)*n], abs(e)) for (n, e) in pairs] 
-    vec = vcat(segments)
-    
-    return :($MyWord($vec))
+function string_to_word(str::AbstractString)
+    syllables = parse_syllables(str)
+    pairs = parse_pairs(syllables)
+    vec = Int[]
+    for (s,e) in pairs
+        for _ in 1:abs(e)
+            push!(vec, sign(e)*s)
+        end
+    end
+    return MyWord(vec)
+end
+
+macro word_str(str::AbstractString)
+    return :($string_to_word($str))
 end
