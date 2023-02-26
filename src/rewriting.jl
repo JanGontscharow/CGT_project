@@ -1,5 +1,5 @@
 
-Rule = Tuple{MyWord, MyWord}
+Rule = Pair{MyWord, MyWord}
 
 function string_repr(
     r::Rule,
@@ -13,7 +13,7 @@ function string_repr(
 end
 
 function rule(p::MyWord, q::MyWord)
-    return lt(p, q) ? (q, p) : (p, q)
+    return lt(p, q) ? q => p : p => q
 end
 # Rule for relators
 function rule(w::MyWord)
@@ -77,7 +77,7 @@ function rewrite!(out::MyWord, w::MyWord, rws::RewritingSystem)
     return out
 end
 
-#is_irreducible(w::MyWord, rws::RewritingSystem) = !is_reducible(rws, w)
+
 function is_irreducible(w::MyWord, rws::RewritingSystem)
     return w == rewrite(w, rws)
 end
@@ -121,7 +121,7 @@ function reduce(rws::RewritingSystem)
     return S
 end
 
-function knuthbendix(R::RewritingSystem; maxrules = 100)
+function knuthbendix(R::RewritingSystem; maxrules = 100) 
     rws = empty(R)
     for r in rwrules(R)
         push!(rws, deepcopy(r))
