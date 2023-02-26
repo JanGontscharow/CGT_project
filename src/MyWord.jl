@@ -4,9 +4,11 @@ struct MyWord <: AbstractVector{Int}
     letters::Vector{Int}
     
     MyWord() = new(Vector{Int}())
+    MyWord(s::Int) = MyWord([s])
     function MyWord(vec::Vector{Int})
         new(vec)
     end
+    
 end
 
 # Implement AbstractVector interface
