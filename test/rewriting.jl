@@ -12,8 +12,8 @@ end
     ε = P.word""
     a = P.word"a"
     b = P.word"b"
-    A = A
-    B = B
+    A = inv(a)
+    B = inv(b)
 
     r1 = a*a*a
     r2 = b*b*b
@@ -21,7 +21,7 @@ end
      
     Π = P.Presentation([r1, r2, r3])
     rws = P.RewritingSystem(Π)
-    rules = [(a*A, ε), (b*B, ε), (r1, ε), (r2, ε), (r3, ε)]
+    rules = [a*A=>ε, b*B=>ε, r1=>ε, r2=>ε, r3=>ε]
     @test P.rwrules(rws) == rules
 
     r1 = P.rule(a*A)
