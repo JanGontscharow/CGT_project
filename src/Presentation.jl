@@ -5,13 +5,15 @@
 # relators are sorted in ascending order
 # relators are freely reduced and cylicylly reduced
 
-struct Presentation
+mutable struct Presentation
     degree::Int
     relators::Vector{MyWord}
     
     function Presentation(deg::Int, relators::Vector{MyWord})
         @assert deg > 0 "degree must be positive"
-        @assert deg >= maximum(map(degree, relators)) "degree of words must be smaller then degree of the presentation"
+        if !isempty(relators)
+            @assert maximum(map(degree, relators))<=deg "degree of words must be smaller then degree of the presentation"
+        end
         rel = map(x -> cyclic_rewrite!(one(x),x), relators)
         rel = sort(rel, lt=lt)
         new(deg, rel)
@@ -26,6 +28,10 @@ end
 rel(Π::Presentation) = Π.relators
 deg(Π::Presentation) = Π.degree
 gens(Π::Presentation) = 1:deg(Π)
+function setdeg!(Π::Presentation, deg::Int)
+    @assert maximum(map(degree, Π.relators)) <= deg "degree of relators must be less or equl to the degree"
+    Π.degree = deg
+end
 
 function free_rewrite!(out::MyWord, w::MyWord)
     resize!(out, 0)
@@ -67,12 +73,13 @@ function Base.show(io::IO, Π::Presentation)
     join(io, rel(Π), ", ")
     print(io, ">")
 end
-"""
-function push!(Π::Presentation, w::MyWord)
+
+# for adding relators
+function Base.push!(Π::Presentation, w::MyWord)
     push!(rel(Π), w)
     sort!(rel(Π), lt=lt)
 end
-"""
+
 function relabel!(Π::Presentation, s::Int, t::Int)
     @assert 0<s<=deg(Π) && 0<t<=deg(Π)
     for w in rel(Π)
