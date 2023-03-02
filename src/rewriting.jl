@@ -28,6 +28,7 @@ struct RewritingSystem
         # add free group relations 
         for s in gens(Π)
             push!(rules, rule(MyWord([s,-s])))
+            push!(rules, rule(MyWord([-s,s])))
         end
         # add relator relations
         for w in rel(Π)
@@ -141,3 +142,25 @@ function knuthbendix(R::RewritingSystem; maxrules = 100)
     end
     return reduce(rws)
 end
+"""
+function knuthbendix_always_reduced(R::RewritingSystem; maxrules=100)
+    rws = empty(R)
+    for r in rwrules(R)
+        push!(rws, deepcopy(r))
+    end
+
+    for (i, r₁) in enumerate(rwrules(rws))
+        for (j,r₂) in enumerate(rwrules(rws))
+            if length(rws.rwrules) > maxrules
+                @warn "Maximum number of rules has been exceeded. Try running knuthbendix with larger maxrules kwarg"
+                return rws
+            end
+            #@info (i,j)
+            resolve_overlaps!(rws, r₁, r₂)
+            r₁ == r₂ && break
+            resolve_overlaps!(rws, r₂, r₁)
+        end
+    end
+    return reduce(rws)
+end
+"""

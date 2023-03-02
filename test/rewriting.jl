@@ -21,17 +21,17 @@ end
      
     Π = P.Presentation([r1, r2, r3])
     rws = P.RewritingSystem(Π)
-    rules = [a*A=>ε, b*B=>ε, r1=>ε, r2=>ε, r3=>ε]
+    rules = [a*A=>ε, A*a=>ε,  b*B=>ε, B*b=>ε,  r1=>ε, r2=>ε, r3=>ε]
     @test P.rwrules(rws) == rules
 
-    r1 = P.rule(a*A)
-    r2 = P.rule(A*a)
-    r3 = P.rule(b*B)
-    r4 = P.rule(B*b)
-    r5 = P.rule(a*b, b*a)
-    r6 = P.rule(b*A, A*b)
-    r7 = P.rule(B*a, a*B)
-    r8 = P.rule(A*B, B*A)
+    r1 = a*A => ε
+    r2 = A*a => ε
+    r3 = b*B => ε
+    r4 = B*b => ε
+    r5 = b*a => a*b
+    r6 = b*A => A*b
+    r7 = B*a => a*B
+    r8 = B*A => A*B
     rws = P.RewritingSystem([r1, r2, r3, r4, r5])
     @test P.rwrules(P.knuthbendix(rws)) == [r1, r2, r3, r4, r5, r6, r7, r8]
 end
