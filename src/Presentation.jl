@@ -25,11 +25,14 @@ mutable struct Presentation
     end
 end
 
+Base.:(==)(Π::Presentation, Π2::Presentation) = rel(Π)==rel(Π2) && deg(Π)==deg(Π2)
+
 rel(Π::Presentation) = Π.relators
 deg(Π::Presentation) = Π.degree
 gens(Π::Presentation) = 1:deg(Π)
+decdeg!(Π::Presentation) = setdeg!(Π, deg(Π)-1)
 function setdeg!(Π::Presentation, deg::Int)
-    @assert maximum(map(degree, Π.relators)) <= deg "degree of relators must be less or equl to the degree"
+    @assert maximum(map(degree, rel(Π))) <= deg "degree of relators must be less or equal to the degree"
     Π.degree = deg
 end
 
@@ -69,13 +72,14 @@ end
 
 
 function Base.show(io::IO, Π::Presentation)
-    print(io, "<", gens(Π), " | ")
+    print(io, "<", map(int_to_char, gens(Π)), " | ")
     join(io, rel(Π), ", ")
     print(io, ">")
 end
 
 # for adding relators
 function Base.push!(Π::Presentation, w::MyWord)
+    @assert deg(Π) >= degree(w) "degree of the word is too large"
     push!(rel(Π), w)
     sort!(rel(Π), lt=lt)
 end

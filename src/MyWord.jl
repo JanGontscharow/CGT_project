@@ -8,7 +8,6 @@ struct MyWord <: AbstractVector{Int}
     function MyWord(vec::Vector{Int})
         new(vec)
     end
-    
 end
 
 # Implement AbstractVector interface
@@ -69,7 +68,15 @@ function Base.:*(w::MyWord, v::MyWord)
     return append!(one(w), w, v)
 end
 Base.inv(w::MyWord) = MyWord(-reverse(w))
-degree(w::MyWord) = maximum(abs.(w.letters))
+degree(w::MyWord) = maximum(abs(w))
+
+function hasletter(w::MyWord, s::Int)
+    for l in w
+        abs(s) == abs(l) && return true
+    end
+    return false
+end
+Base.abs(w::MyWord) = abs.(w.letters)
 
 function run_decomposition(w::MyWord)
     if iszero(length(w))
