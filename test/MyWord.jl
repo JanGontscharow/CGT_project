@@ -19,7 +19,6 @@ end
     @test P.degree(v) == 2
     
     @test P.run_decomposition(w*v) == [(-1, 1), (1, 1), (2, 2)]
-    #@test show(w*v) == "a^-1ab^2" 
 
     a = P.word"a"
     b = P.word"b"
