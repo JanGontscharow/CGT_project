@@ -72,7 +72,7 @@ end
 
 
 function Base.show(io::IO, Π::Presentation)
-    print(io, "<", map(int_to_char, gens(Π)), " | ")
+    print(io, "<", join(map(int_to_char, gens(Π)), ", "), " | ")
     join(io, rel(Π), ", ")
     print(io, ">")
 end
