@@ -15,6 +15,7 @@ include("presentation_macro.jl")
 include("rewriting.jl")
 include("IndexAutomaton.jl")
 include("tietze_transformations.jl")
+include("tietze_programm.jl")
 
 """
     make using MyPackage work.
