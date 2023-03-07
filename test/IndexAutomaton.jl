@@ -49,7 +49,7 @@ end
 	end
 
 	idxA = P.IndexAutomaton(rws, 2)
-	n,l = (20,200)
+	n,l = (10,100)
 
 	for i in 1:n
 		w = P.MyWord(rand(1:2, l))
