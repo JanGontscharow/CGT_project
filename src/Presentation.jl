@@ -14,7 +14,7 @@ mutable struct Presentation
         if !isempty(relators)
             @assert maximum(map(degree, relators))<=deg "degree of words must be smaller then degree of the presentation"
         end
-        rel = map(x -> cyclic_rewrite!(one(x),x), relators)
+        rel = map(x -> cyclic_rewrite(x), relators)
         rel = sort(rel, lt=lt)
         new(deg, rel)
     end
@@ -30,9 +30,11 @@ Base.:(==)(Π::Presentation, Π2::Presentation) = rel(Π)==rel(Π2) && deg(Π)==
 rel(Π::Presentation) = Π.relators
 deg(Π::Presentation) = Π.degree
 gens(Π::Presentation) = 1:deg(Π)
-decdeg!(Π::Presentation) = setdeg!(Π, deg(Π)-1)
+decdeg!(Π::Presentation) = decdeg!(Π, 1)
+decdeg!(Π::Presentation, n::Int) = setdeg!(Π, deg(Π)-n)
 function setdeg!(Π::Presentation, deg::Int)
-    @assert maximum(map(degree, rel(Π))) <= deg "degree of relators must be less or equal to the degree"
+    isempty(rel(Π)) || @assert maximum(map(degree, rel(Π))) <= deg "degree of relators must be less or equal to the degree"
+    isempty(rel(Π)) && @assert 0 < deg "degree of relators must be less or equal to the degree"
     Π.degree = deg
 end
 
@@ -55,6 +57,7 @@ end
     then we have ww = uvvu^-1. In particular we can obtain x := uv and
     y := vu^-1, which lets us compute v via freely reducing yx = vuu^-1v  
 """
+cyclic_rewrite(w::MyWord) = cyclic_rewrite!(one(w), w) 
 function cyclic_rewrite!(out::MyWord, w::MyWord)
     free_rewrite!(out, w)
     out = out*out
@@ -95,6 +98,19 @@ function relabel!(Π::Presentation, s::Int, t::Int)
             end
         end
     end 
+end
+
+function relabel!(Π::Presentation, dict::Dict{Int,Int})
+    isempty(dict) || @assert maximum(abs.(values(dict)))<=deg(Π) "cannot relabel a letter to one that exceeds the degree"
+    @assert minimum(keys(dict)) > 0 "keys must be positive"
+    to_relabel = collect(keys(dict))
+    for w in rel(Π)
+        for (i, l) in enumerate(w)
+            if abs(l) ∈ to_relabel
+                w[i] = sign(l)*dict[abs(l)]
+            end
+        end
+    end
 end
 
 
