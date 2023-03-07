@@ -69,14 +69,18 @@ function Base.:*(w::MyWord, v::MyWord)
 end
 Base.inv(w::MyWord) = MyWord(-reverse(w))
 degree(w::MyWord) = maximum(abs(w))
+Base.abs(w::MyWord) = abs.(w.letters)
 
+# For Tietze-programs
 function hasletter(w::MyWord, s::Int)
     for l in w
         abs(s) == abs(l) && return true
     end
     return false
 end
-Base.abs(w::MyWord) = abs.(w.letters)
+function filter_letters(w::MyWord, letters::Vector{Int})
+    return MyWord(filter(l -> abs(l) ∉ letters, w))
+end
 
 function run_decomposition(w::MyWord)
     if iszero(length(w))
