@@ -16,11 +16,12 @@ include("rewriting.jl")
 include("IndexAutomaton.jl")
 include("tietze_transformations.jl")
 include("tietze_programm.jl")
+include("comparisons.jl")
+include("substring_search.jl")
 
 """
     make using MyPackage work.
     add test for cyclic_rewrite and free_rewrite and LenLex
-    write replace! with dict in Presentation.jl.
 """
 
 
