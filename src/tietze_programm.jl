@@ -1,3 +1,18 @@
+function my_tietze_programm!(Π::Presentation; maxrules=50)
+    eliminate_len1!(Π)
+    eliminate_len2!(Π)
+    for w ∈ reverse(rel(Π))
+        # consider the Presentation Π_w obtained by leaving out w
+        Π_w = copy(Π)
+        filter!(v -> v != w, rel(Π_w))
+        rws_w = RewritingSystem(Π_w) 
+        R_w = knuthbendix(rws_w; maxrules=50)
+        isnothing(R_w) && continue
+        # if knuth-bendix can be applied try T2(Π,w)
+        changes_made = t2!(Π, w, R_w)
+    end
+end
+
 
 function eliminate_len2!(Π::Presentation)
     isempty(rel(Π)) && return nothing # nothing to eliminate
