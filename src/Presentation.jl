@@ -25,6 +25,7 @@ mutable struct Presentation
     end
 end
 
+Base.copy(Π::Presentation) = Presentation(rel(Π))
 Base.:(==)(Π::Presentation, Π2::Presentation) = rel(Π)==rel(Π2) && deg(Π)==deg(Π2)
 
 rel(Π::Presentation) = Π.relators
@@ -101,7 +102,8 @@ function relabel!(Π::Presentation, s::Int, t::Int)
 end
 
 function relabel!(Π::Presentation, dict::Dict{Int,Int})
-    isempty(dict) || @assert maximum(abs.(values(dict)))<=deg(Π) "cannot relabel a letter to one that exceeds the degree"
+    isempty(dict) && return nothing
+    @assert maximum(abs.(values(dict)))<=deg(Π) "cannot relabel a letter to one that exceeds the degree"
     @assert minimum(keys(dict)) > 0 "keys must be positive"
     to_relabel = collect(keys(dict))
     for w in rel(Π)
