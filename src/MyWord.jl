@@ -67,7 +67,8 @@ end
 function Base.:*(w::MyWord, v::MyWord)
     return append!(one(w), w, v)
 end
-Base.inv(w::MyWord) = MyWord(-reverse(w))
+Base.inv(w::MyWord) = reverse(-w)
+inv!(w::MyWord) = reverse!(w.*=-1)
 degree(w::MyWord) = maximum(abs(w))
 Base.abs(w::MyWord) = abs.(w.letters)
 
