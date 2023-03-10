@@ -1,4 +1,4 @@
-#permutations(w::MyWord) = (MyWord(w[i+1:end])*MyWord(w[begin:i]) for i in lastindex(w):-1:firstindex(w))
+halflen(w::MyWord) = div(length(w),2)
 
 """
     find_long_matching_substring(w, v; fast=false)
@@ -39,78 +39,25 @@ function find_long_matching_substring(w::MyWord, v::MyWord; fast=false)
             2.2 then we do the same but scanning to the right
     """
 
-    while !isempty(candidates1) || !isempty(candidates2)
-        if !isempty(candidates1)
-            x = 1
-            y = pop!(candidates1) 
+    candidates_arr = [candidates1, candidates2, inv_candidates1, inv_candidates2]
+    x_arr = [1, halflen(w)+length(w)%2, length(w), halflen(w)+1]
+    for i in 1:4
+        x = x_arr[i]
+        candidates = candidates_arr[i]
+        i == 3 && inv!(ww)
+        while !isempty(candidates)
+            y = pop!(candidates) 
             @info "x:$x, y:$y"
+            # actual work is done here
             m, m_begin_ww, m_begin_vv = maximal_matching_string(x, y, ww, vv, length(w), length(v))
+            # visualization of the match
             @info "vv: $(MyWord(vv[1:m_begin_vv-1])) ⋅ $m ⋅ $(MyWord(vv[m_begin_vv+length(m):end]))"
-            @info "ww: $(MyWord(ww[1:m_begin_ww-1])) ⋅ $m ⋅ $(MyWord(ww[m_begin_ww+length(m):end]))"
+            str = i<3 ? "ww" : "WW"
+            @info "$str: $(MyWord(ww[1:m_begin_ww-1])) ⋅ $m ⋅ $(MyWord(ww[m_begin_ww+length(m):end]))"
             
             if length(m) > halflen(w)
-                fast && return m
-                if isnothing(match)
-                    match = m
-                else
-                    match = length(m)>length(match) ? m : match
-                end 
-            end
-        end
-
-        if !isempty(candidates2)
-            x = halflen(w)+length(w)%2
-            y = pop!(candidates2) 
-            @info "x:$x, y:$y"
-            m, m_begin_ww, m_begin_vv = maximal_matching_string(x, y, ww, vv, length(w), length(v))
-            @info "vv: $(MyWord(vv[1:m_begin_vv-1])) ⋅ $m ⋅ $(MyWord(vv[m_begin_vv+length(m):end]))"
-            @info "ww: $(MyWord(ww[1:m_begin_ww-1])) ⋅ $m ⋅ $(MyWord(ww[m_begin_ww+length(m):end]))"
-            
-            if length(m) > halflen(w)
-                fast && return m
-                if isnothing(match)
-                    match = m
-                else
-                    match = length(m)>length(match) ? m : match
-                end 
-            end
-        end
-    end
-
-
-    # Now we look for matches with the inverses
-    inv!(ww)
-    while !isempty(inv_candidates1) || !isempty(inv_candidates2)
-
-        if !isempty(inv_candidates1)
-            x = length(w)
-            y = pop!(inv_candidates1) 
-            @info "x:$x, y:$y"
-            m, m_begin_ww, m_begin_vv = maximal_matching_string(x, y, ww, vv, length(w), length(v))
-            @info "vv: $(MyWord(vv[1:m_begin_vv-1])) ⋅ $m ⋅ $(MyWord(vv[m_begin_vv+length(m):end]))"
-            @info "w^-1w^-1: $(MyWord(ww[1:m_begin_ww-1])) ⋅ $m ⋅ $(MyWord(ww[m_begin_ww+length(m):end]))"
-            
-
-            if length(m) > halflen(w)
-                fast && return m
-                if isnothing(match)
-                    match = m
-                else
-                    match = length(m)>length(match) ? m : match
-                end 
-            end
-        end
-
-        if !isempty(inv_candidates2)
-            x = halflen(w)+1
-            y = pop!(inv_candidates2) 
-            @info "x:$x, y:$y"
-            m, m_begin_ww, m_begin_vv = maximal_matching_string(x, y, ww, vv, length(w), length(v))
-            @info "vv: $(MyWord(vv[1:m_begin_vv-1])) ⋅ $m ⋅ $(MyWord(vv[m_begin_vv+length(m):end]))"
-            @info "w^-1w^-1: $(MyWord(ww[1:m_begin_ww-1])) ⋅ $m ⋅ $(MyWord(ww[m_begin_ww+length(m):end]))"
-            
-            if length(m) > halflen(w)
-                fast && return m
+                fast && return m  # return first match that is long enough
+                # store the longest match
                 if isnothing(match)
                     match = m
                 else
@@ -122,8 +69,6 @@ function find_long_matching_substring(w::MyWord, v::MyWord; fast=false)
 
     return match
 end
-
-#function subroutine(x::Int, y::Int, ww::MyWord, vv_MyWord, len_w, len_v)
 
 
 function maximal_matching_string(x::Int, y::Int, ww::MyWord, vv::MyWord, len_w, len_v)
@@ -162,5 +107,3 @@ function maximal_matching_string(x::Int, y::Int, ww::MyWord, vv::MyWord, len_w, 
     
     return m, m_begin_ww, m_begin_vv
 end
-
-halflen(w::MyWord) = div(length(w),2)
