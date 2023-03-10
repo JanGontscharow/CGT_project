@@ -67,7 +67,7 @@ end
 function Base.:*(w::MyWord, v::MyWord)
     return append!(one(w), w, v)
 end
-Base.inv(w::MyWord) = reverse(-w)
+Base.inv(w::MyWord) = MyWord(reverse(-w))
 inv!(w::MyWord) = reverse!(w.*=-1)
 degree(w::MyWord) = maximum(abs(w))
 Base.abs(w::MyWord) = abs.(w.letters)
@@ -111,11 +111,23 @@ function Base.show(io::IO, w::MyWord)
         print(io, "ε")
     else
         for (n, run) in run_decomposition(w)
-            if run == 1 && n > 0
+            #if run == 1 && n > 0
+            #    print(io, int_to_char(n))
+            #else
+            #    print(io, int_to_char(abs(n)), "^", sign(n)*run)
+            #end
+            if run == 1
                 print(io, int_to_char(n))
             else
-                print(io, int_to_char(abs(n)), "^", sign(n)*run)
+                print(io, int_to_char(n), int_to_exp(sign(n)*run))
             end
         end
     end
+end
+digit_to_exp = Dict(1=>'¹', 2=>'²', 3=>'³', 4=>'⁴', 5=>'⁵', 6=>'⁶', 7=>'⁷', 8=>'⁸', 9=>'⁹',
+-1=>'¹', -2=>'²', -3=>'³', -4=>'⁴', -5=>'⁵', -6=>'⁶', -7=>'⁷', -8=>'⁸', -9=>'⁹')
+function int_to_exp(n::Int)
+    exp = [digit_to_exp[d] for d in reverse(digits(n))]
+    #n < 0 && pushfirst!(exp, '⁻')
+    return join(exp)
 end
