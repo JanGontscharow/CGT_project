@@ -4,19 +4,31 @@
 
 # Examples:
 ```jldoctest
-julia> w = word"ab^2c^-2c^-1"
-ab^2c^-3
+julia> w = word"a^2a^-1bb^2B^0C"
+7-element MyPackage.MyWord:
+  1
+  1
+ -1
+  2
+  2
+  2
+ -3
 
-julia> typeof(p)
+julia> show(w)
+a²Ab³C
+
+julia> typeof(w)
 MyWord
 
-julia> degree(p)
+julia> degree(w)
 3
 ```
 """
+
+# syllables referring to a letter to a power
 function parse_syllables(str::AbstractString)
     # match letter with opotional exponent
-    pattern = r"([a-z])(\^\-?\d+)?"
+    pattern = r"([a-zA-Z])(\^\-?\d+)?"
     return eachmatch(pattern, str)
 end
 

@@ -10,7 +10,7 @@ function parse_degree(str::String)
 end
 
 function parse_relators(str::String)
-    pattern = r"\|\s?([a-z](\^\-?\d+)?)+(\,\s?([a-z](\^\-?\d+)?)+)*"
+    pattern = r"\|\s?([a-zA-Z](\^\-?\d+)?)+(\,\s?([a-zA-Z](\^\-?\d+)?)+)*"
     mat = match(pattern, str)
     isnothing(mat) && return MyWord[]
     mat = filter((c -> !(c in " |")), mat.match)
