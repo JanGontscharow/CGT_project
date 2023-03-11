@@ -12,7 +12,7 @@ a common substring `u` of `w` and `v` such that
 `u` has at least half the length of `w`
 
 """
-function find_long_matching_substring(w::MyWord, v::MyWord; fast=false)
+function substring_search(w::MyWord, v::MyWord; fast=false)
     @assert length(w) <= length(v)
     # long match has to contain either l_1 or l_half or thier inverses
     l_first, l_half = w[1], w[halflen(w)+length(w)%2]
@@ -22,9 +22,8 @@ function find_long_matching_substring(w::MyWord, v::MyWord; fast=false)
     inv_candidates2 = findall(isequal(-l_half), v)
     ww = w*w # used for searching in a cyclic permutation of w
     vv = v*v # used for searching in a cyclic permutation of v
-    match = nothing # stores longest valid length
-    @info "$candidates1, $candidates2, $inv_candidates1, $inv_candidates2"
-
+    match = word"" # stores longest valid length
+    
     """
         The algorithm for the majority follows the algorithm decribed in the papers.
         In particular we make use of the following observartion  
@@ -53,7 +52,7 @@ function find_long_matching_substring(w::MyWord, v::MyWord; fast=false)
             # visualization of the match
             @info "vv: $(MyWord(vv[1:m_begin_vv-1])) ⋅ $m ⋅ $(MyWord(vv[m_begin_vv+length(m):end]))"
             str = i<3 ? "ww" : "WW"
-            @info "$str: $(MyWord(ww[1:m_begin_ww-1])) ⋅ $m ⋅ $(MyWord(ww[m_begin_ww+length(m):end]))"
+            @info "$str: $(MyWord(ww[1:m_begin_ww-1])) ⋅ $m ⋅ $(MyWord(ww[m_begin_ww+length(m):length(ww)]))"
             
             if length(m) > halflen(w)
                 fast && return m  # return first match that is long enough
@@ -67,7 +66,7 @@ function find_long_matching_substring(w::MyWord, v::MyWord; fast=false)
         end
     end
 
-    return match
+    return match, m_begin_ww, m_begin_vv
 end
 
 
@@ -76,9 +75,9 @@ function maximal_matching_string(x::Int, y::Int, ww::MyWord, vv::MyWord, len_w, 
     circshift!(ww, x-1) 
     # center vv at y for matching 
     circshift!(vv, y-1) 
+
     # find beginning of match
     m_begin = len_v+1
-
     #@info "find beginning..."
     for i ∈ 0:-1:2-len_w
         #@info "$(MyWord(vv[len_v+i])) == $(MyWord(ww[len_w+i]))?"
@@ -102,8 +101,8 @@ function maximal_matching_string(x::Int, y::Int, ww::MyWord, vv::MyWord, len_w, 
     circshift!(vv, -y+1)
     
     # compute beginnings indices in ww, vv 
-    m_begin_ww = (m_begin + len_w - len_v)+x-1 % len_w
-    m_begin_vv = m_begin+y-1 % len_v
+    m_begin_ww = ((m_begin + len_w - len_v)+x-1) % len_w
+    m_begin_vv = (m_begin+y-1) % len_v
     
     return m, m_begin_ww, m_begin_vv
 end

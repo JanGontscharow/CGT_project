@@ -84,11 +84,8 @@ function filter_letters(w::MyWord, letters::Vector{Int})
 end
 
 function run_decomposition(w::MyWord)
-    if iszero(length(w))
-        return nothing
-    elseif  length(w) == 1
-        return [(w[1], 1)]
-    end
+    isone(w) && return nothing
+    length(w)==1 && return [(w[1], 1)]
 
     runs = []
     l̃, run = w[1], 1
@@ -125,8 +122,9 @@ function Base.show(io::IO, w::MyWord)
     end
 end
 digit_to_exp = Dict(1=>'¹', 2=>'²', 3=>'³', 4=>'⁴', 5=>'⁵', 6=>'⁶', 7=>'⁷', 8=>'⁸', 9=>'⁹',
--1=>'¹', -2=>'²', -3=>'³', -4=>'⁴', -5=>'⁵', -6=>'⁶', -7=>'⁷', -8=>'⁸', -9=>'⁹')
+-1=>'¹', -2=>'²', -3=>'³', -4=>'⁴', -5=>'⁵', -6=>'⁶', -7=>'⁷', -8=>'⁸', -9=>'⁹', 0=>'⁰')
 function int_to_exp(n::Int)
+    n == 0 && return ""
     exp = [digit_to_exp[d] for d in reverse(digits(n))]
     #n < 0 && pushfirst!(exp, '⁻')
     return join(exp)
