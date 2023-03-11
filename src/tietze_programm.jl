@@ -1,18 +1,49 @@
-function my_tietze_programm!(Π::Presentation; maxrules=50)
+function havas!(Π::Presentation)
     eliminate_len1!(Π)
     eliminate_len2!(Π)
-    for w ∈ reverse(rel(Π))
-        # consider the Presentation Π_w obtained by leaving out w
-        Π_w = copy(Π)
-        filter!(v -> v != w, rel(Π_w))
-        rws_w = RewritingSystem(Π_w) 
-        R_w = knuthbendix(rws_w; maxrules=50)
-        isnothing(R_w) && continue
-        # if knuth-bendix can be applied try T2(Π,w)
-        changes_made = t2!(Π, w, R_w)
+    changes_made = true
+    while changes_made
+        changes_made = false
+
+        for (i,w) ∈ enumerate(collect(rel(Π)))
+            for v ∈ collect(rel(Π))[i+1:end]
+                match = find_long_matching_substring(w, v)
+            end
+        end
     end
 end
 
+
+
+function my_tietze_programm!(Π::Presentation; maxrules=50)
+    eliminate_len1!(Π)
+    eliminate_len2!(Π)
+    changes_made = true
+    while changes_made
+        changes_made = false
+
+        for w ∈ collect(rel(Π))
+            # consider the Presentation Π_w obtained by leaving out w
+            Π_w = copy(Π)
+            filter!(v -> v != w, rel(Π_w))
+            rws_w = RewritingSystem(Π_w) 
+            R_w = knuthbendix(rws_w; maxrules=maxrules)
+            isnothing(R_w) && continue
+            # if knuth-bendix can be applied try T2(Π,w)
+            changes_made = t2!(Π, w, R_w)
+            changes_made && break
+        end
+
+        # try to apply T4
+        for s in gens(Π)
+            if t4_check(Π, s)
+                t4!(Π, s)
+                changes_made = true
+                break
+            end
+        end
+    end
+end
 
 function eliminate_len2!(Π::Presentation)
     isempty(rel(Π)) && return nothing # nothing to eliminate

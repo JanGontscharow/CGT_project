@@ -58,11 +58,12 @@ end
 
 # needed if the letter is negative
 function letter_to_index(l::Int, n::Int)
-	if l<0
-		return Int(-l+(n/2))
-	else
-		return l
-	end
+	l < 0 ? (return (-l + div(n, 2))) : return l
+	#if l<0
+	#	return Int(-l+(n/2))
+	#else
+	#	return l
+	#end
 end
 letter_to_index(idxA::IndexAutomaton, l::Int) = letter_to_index(l, input_size(idxA))
 
@@ -73,9 +74,6 @@ hasedge(::IndexAutomaton, σ::State, label::Integer) = hasedge(σ, label)
 trace(::IndexAutomaton, label::Integer, σ::State) = σ[label]
 
 
-"""
-
-"""
 function IndexAutomaton(R::RewritingSystem, n::Int)
 	# n is the degree so we need 2*n transitions
 	α = State{UInt32, Rule}(2*n, 0)
