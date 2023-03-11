@@ -29,8 +29,8 @@ function weighted_substring_search(w::MyWord, v::MyWord, wt; fast=false)
     inv_candidates2 = findall(isequal(-l_half), v)
     ww = w*w # used for searching in a cyclic permutation of w
     vv = v*v # used for searching in a cyclic permutation of v
-    match = nothing # stores longest valid length
-    @info "$candidates1, $candidates2, $inv_candidates1, $inv_candidates2"
+    match, begin_w, begin_v, inverse = (word"", 0, 0, false) # initialize return
+    #@info "$candidates1, $candidates2, $inv_candidates1, $inv_candidates2"
 
     candidates_arr = [candidates1, candidates2, inv_candidates1, inv_candidates2]
     x_arr = [1, halfweight_idx(wt, w)+length(w)%2, length(w), halfweight_idx(wt, w)+1]
@@ -41,10 +41,12 @@ function weighted_substring_search(w::MyWord, v::MyWord, wt; fast=false)
         i == 3 && inv!(ww)
         while !isempty(candidates)
             y = pop!(candidates) 
-            @info "x:$x, y:$y"
+            
             # actual work is done here
             m, m_begin_ww, m_begin_vv = maximal_matching_string(x, y, ww, vv, length(w), length(v))
+            
             # visualization of the match
+            @info "x:$x, y:$y"
             @info "vv: $(MyWord(vv[1:m_begin_vv-1])) ⋅ $m ⋅ $(MyWord(vv[m_begin_vv+length(m):end]))"
             str = i<3 ? "ww" : "WW" 
             @info "$str: $(MyWord(ww[1:m_begin_ww-1])) ⋅ $m ⋅ $(MyWord(ww[m_begin_ww+length(m):end]))"
@@ -52,14 +54,10 @@ function weighted_substring_search(w::MyWord, v::MyWord, wt; fast=false)
             if weight(wt, m) > halfweight(wt, w)
                 fast && return m  # return first match that is heavy enough
                 # store the heaviest match
-                if isnothing(match)
-                    match = m
-                else
-                    match = weight(wt, m) > weight(wt, match) ? m : match
-                end 
+                weight(wt, m)>weight(wt, match) && ((match, begin_w, begin_v, inverse) = (m, m_begin_ww, m_begin_vv, i>2)) 
             end
         end
     end
 
-    return match
+    return match, begin_w, begin_v, inverse
 end

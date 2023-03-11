@@ -8,8 +8,10 @@ halflen(w::MyWord) = div(length(w),2)
 - `v::MyWord`: longer relator of a presentation
 - `fast::bool`: determines whether the function returns the first or the longest match
 # Returns
-a common substring `u` of `w` and `v` such that 
-`u` has at least half the length of `w`
+- a common substring `u` of `w` and `v` such that `u` has at least half the length of `w`
+- the index `begin_w` of the beginning of the match in `w`
+- the index `begin_v` of the beginning of the match in `v`
+- a flag `inverse::bool` which tells if the inverse of `W` was matched
 
 """
 function substring_search(w::MyWord, v::MyWord; fast=false)
@@ -22,7 +24,8 @@ function substring_search(w::MyWord, v::MyWord; fast=false)
     inv_candidates2 = findall(isequal(-l_half), v)
     ww = w*w # used for searching in a cyclic permutation of w
     vv = v*v # used for searching in a cyclic permutation of v
-    match = word"" # stores longest valid length
+    match, begin_w, begin_v, inverse = (word"", 0, 0, false) # initialize return
+    #@show match, begin_w, begin_v, inverse
     
     """
         The algorithm for the majority follows the algorithm decribed in the papers.
@@ -46,33 +49,32 @@ function substring_search(w::MyWord, v::MyWord; fast=false)
         i == 3 && inv!(ww)
         while !isempty(candidates)
             y = pop!(candidates) 
-            @info "x:$x, y:$y"
+            
             # actual work is done here
             m, m_begin_ww, m_begin_vv = maximal_matching_string(x, y, ww, vv, length(w), length(v))
+
             # visualization of the match
+            @info "x:$x, y:$y"
             @info "vv: $(MyWord(vv[1:m_begin_vv-1])) ⋅ $m ⋅ $(MyWord(vv[m_begin_vv+length(m):end]))"
             str = i<3 ? "ww" : "WW"
             @info "$str: $(MyWord(ww[1:m_begin_ww-1])) ⋅ $m ⋅ $(MyWord(ww[m_begin_ww+length(m):length(ww)]))"
             
             if length(m) > halflen(w)
+                #@info "↑ a match ↑"
                 fast && return m  # return first match that is long enough
                 # store the longest match
-                if isnothing(match)
-                    match = m
-                else
-                    match = length(m)>length(match) ? m : match
-                end 
+                length(m)>length(match) && ((match, begin_w, begin_v, inverse) = (m, m_begin_ww, m_begin_vv, i>2))
             end
         end
     end
 
-    return match, m_begin_ww, m_begin_vv
+    return match, begin_w, begin_v, inverse
 end
 
 
 function maximal_matching_string(x::Int, y::Int, ww::MyWord, vv::MyWord, len_w, len_v)
     # center ww at x for matching
-    circshift!(ww, x-1) 
+    circshift!(ww, x-1)
     # center vv at y for matching 
     circshift!(vv, y-1) 
 
