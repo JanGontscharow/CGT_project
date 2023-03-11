@@ -1,7 +1,6 @@
 #Weight = Int->Int
 weights(s::Int) = t -> t==s ? 100 : 1
 weights() = t -> 1
-weights(wt1, wt2) = t -> wt1(t) + wt2(t)
 weight(wt, w::MyWord) = sum(map(wt, w))
 
 function halfweight(wt, w::MyWord)
@@ -20,7 +19,7 @@ function halfweight_idx(wt, w::MyWord)
 end
 
 
-function find_long_matching_substring_by_weight(w::MyWord, v::MyWord, wt; fast=false)
+function weighted_substring_search(w::MyWord, v::MyWord, wt; fast=false)
     @assert weight(wt, w) <= weight(wt, v)
     # long match has to contain either l_1 or l_half or thier inverses
     l_first, l_half = w[1], w[halfweight_idx(wt, w)+length(w)%2]
