@@ -56,22 +56,34 @@ struct IndexAutomaton{T,S} <: Automaton
     initial::State{T,S}
 end
 
-# needed if the letter is negative
-function letter_to_index(l::Int, n::Int)
-	l < 0 ? (return (-l + div(n, 2))) : return l
-	#if l<0
-	#	return Int(-l+(n/2))
-	#else
-	#	return l
-	#end
+"""
+	`n` input size of Automaton.
+	converts a letters from (-n/2):(n/2) to indices in 1:n.
+	This is done by mapping (-n/2):-1 to (n/2)+1:n via
+		l ↦ abs(l) + n/2 
+	We also need to treat -n:-(n/2) since we might try to 
+	convert the inverse of `m` but `m` is already an index
+	of a letter `l` in (-n/2):-1. Which means
+		letter_to_index(-m)
+		 == letter_to_index(-letter_to_index(l))
+	In this case we want to Return
+		letter_to_index(-l) 
+		 == -l
+		 == m-n/2
+"""
+function letter_to_index(m::Int, n::Int)
+	-m > (n/2) && (return -m-div(n, 2)) # special case described above
+	m < 0 ? (return (-m + div(n, 2))) : return m
 end
 letter_to_index(idxA::IndexAutomaton, l::Int) = letter_to_index(l, input_size(idxA))
+word_to_idxvec(idxA::IndexAutomaton, w::MyWord) = map(l -> letter_to_index(idxA, l), w)
 
 initial(idxA::IndexAutomaton) = idxA.initial
 input_size(idxA::IndexAutomaton) = idxA.input_size
 
 hasedge(::IndexAutomaton, σ::State, label::Integer) = hasedge(σ, label)
 trace(::IndexAutomaton, label::Integer, σ::State) = σ[label]
+trace(idxA::IndexAutomaton, w::MyWord, σ::State) = trace(idxA, word_to_idxvec(idxA, w), σ)
 
 
 function IndexAutomaton(R::RewritingSystem, n::Int)
@@ -116,11 +128,7 @@ Return a pair `(l, τ)`, where
 """
 function trace(A::Automaton, w::AbstractVector, σ=initial(A))
 	for (i, l) in enumerate(w)
-		if hasedge(A, σ, l)
-			σ = trace(A, l, σ)
-		else
-			return i-1, σ
-		end
+		hasedge(A, σ, l) ? σ = trace(A, l, σ) : (return i-1, σ)
 	end
 	return length(w), σ
 end
