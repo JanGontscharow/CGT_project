@@ -3,36 +3,38 @@ using Random
 @testset "State" begin
 	S = P.State{UInt32, P.Rule}
 	σ = S(2)
-	τ1 = S(2, 3)
-	τ2 = S(2, 4)
-	σ[1] = τ1
-	σ[2] = τ2
+	τ₁ = S(2, 3)
+	τ₂ = S(2, 4)
+	σ[1] = τ₁
+	σ[2] = τ₂
 
 	@test P.hasedge(σ, 1)
 	@test P.hasedge(σ, 2)
-	@test P.max_degree(τ1) == 2
-	@test P.degree(τ1) == 0 
+	@test P.max_degree(τ₁) == 2
+	@test P.degree(τ₂) == 0 
 end
 
 @testset "IndexAutomaton" begin
 	S = P.State{UInt32, P.Rule}
 	σ = S(2)
-	σ1 = S(2)
-	σ2 = S(2)
-	σ[1] = σ1
-	σ[2] = σ2
-	idxA = P.IndexAutomaton(1, σ)
+	σ₁ = S(2)
+	σ₂ = S(2)
+	σ[1] = σ₁
+	σ[2] = σ₂
+	idxA = P.IndexAutomaton(2, σ)
+	@test P.letter_to_index(idxA, -1) == 2
 
-	@test P.trace(idxA, 1, σ) == σ1
-	@test P.trace(idxA, 2, σ) == σ2
-	@test isnothing(P.trace(idxA, 1, σ1)) 
+	@test P.trace(idxA, 1, σ) == σ₁
+	@test P.trace(idxA, 2, σ) == σ₂
+	@test isnothing(P.trace(idxA, 1, σ₁)) 
 
-	σ12 = S(1)
-	σ121 = S(0)
-	σ1[2] = σ12
-	σ12[1] = σ121
-	@test P.trace(idxA, [1,2,2], σ) == (2, σ12)
-	@test P.trace(idxA, [1,2,1], σ) == (3, σ121)
+	σ₁₂ = S(1)
+	σ₁₂₁ = S(0)
+	σ₁[2] = σ₁₂
+	σ₁₂[1] = σ₁₂₁
+	@test P.trace(idxA, [1,2,2], σ) == (2, σ₁₂)
+	@test P.trace(idxA, [1,2,1], σ) == (3, σ₁₂₁)
+	@test P.trace(idxA, P.word"aAa") == (3, σ₁₂₁)
 end
 
 @testset "Index rewrite" begin
