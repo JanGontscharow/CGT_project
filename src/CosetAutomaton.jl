@@ -6,7 +6,7 @@ struct CosetAutomaton{S<:State} <: Automaton
 end
 
 function CosetAutomaton(n::Int)
-    S = State{UInt32, Rule}
+    S = State{UInt32, UInt32}
     α = S(2*n)
     ω = S(2*n, fail=true)
     CosetAutomaton{S}(2*n,[α], Dict(), ω)
@@ -18,16 +18,26 @@ initial(ca::CosetAutomaton) = first(states(ca))
 fail(ca::CosetAutomaton) = ca.ω
 input_size(ca::CosetAutomaton) = ca.input_size
 
+# Conversion between index space and letter space
 letter_to_index(ca::CosetAutomaton, l::Int) = letter_to_index(l, input_size(ca))
-word_to_idxvec(ca::CosetAutomaton, w::MyWord) = map(l -> letter_to_index(ca, l), w)
+word_to_idxvec(ca::CosetAutomaton, w::AbstractVector) = map(l -> letter_to_index(ca, l), w)
+index_to_letter(ca::CosetAutomaton, idx::Int) = index_to_letter(idx, input_size(ca))
+function index_to_letter(idx::Int, n::Int)
+    l = idx > div(n,2) ? -(idx-div(n,2)) : idx
+    return MyWord(l)
+end
+
 
 function hasedge(ca ::CosetAutomaton, σ::State, label::Integer)
     return hasedge(σ, label) && !isfail(trace(ca, label, σ))
 end
-trace(::CosetAutomaton, label::Integer, σ::State) = σ[label]
-function trace(ca::CosetAutomaton, w::MyWord, σ::State, reverse=false)
-    reverse && return trace(ca, word_to_idxvec(ca, inv(w)), σ)
-    return trace(ca, word_to_idxvec(ca, w), σ)
+trace(ca::CosetAutomaton, label::Integer, σ=initial(ca)) = σ[label]
+function trace(ca::CosetAutomaton, w::AbstractVector, σ::State=initial(ca))
+    w = word_to_idxvec(ca, w)
+    for (i, l) in enumerate(w)
+		hasedge(ca, σ, l) ? σ = trace(ca, l, σ) : (return i-1, σ)
+	end
+	return length(w), σ
 end
 
 partition(ca::CosetAutomaton) = ca.partition

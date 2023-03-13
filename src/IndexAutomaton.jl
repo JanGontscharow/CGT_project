@@ -76,14 +76,23 @@ function letter_to_index(m::Int, n::Int)
 	m < 0 ? (return (-m + div(n, 2))) : return m
 end
 letter_to_index(idxA::IndexAutomaton, l::Int) = letter_to_index(l, input_size(idxA))
-word_to_idxvec(idxA::IndexAutomaton, w::MyWord) = map(l -> letter_to_index(idxA, l), w)
+word_to_idxvec(idxA::IndexAutomaton, w::AbstractVector) = map(l -> letter_to_index(idxA, l), w)
 
 initial(idxA::IndexAutomaton) = idxA.initial
 input_size(idxA::IndexAutomaton) = idxA.input_size
 
 hasedge(::IndexAutomaton, σ::State, label::Integer) = hasedge(σ, label)
 trace(::IndexAutomaton, label::Integer, σ::State) = σ[label]
-trace(idxA::IndexAutomaton, w::MyWord, σ::State) = trace(idxA, word_to_idxvec(idxA, w), σ)
+
+
+
+function trace(idxA::IndexAutomaton, w::AbstractVector, σ::State=initial(idxA))
+	w = word_to_idxvec(idxA, w)
+	for (i, l) in enumerate(w)
+		hasedge(idxA, σ, l) ? σ = trace(idxA, l, σ) : (return i-1, σ)
+	end
+	return length(w), σ
+end
 
 
 function IndexAutomaton(R::RewritingSystem, n::Int)
@@ -101,37 +110,6 @@ function Base.append!(idxA::IndexAutomaton, rules)
 	return idxA
 end
 
-
-"""
-	hasedge(A::Automaton, σ, label)
-Check if `A` contains an edge starting at `σ` labeled by `label` 
-"""
-function hasedge(A::Automaton, σ, label) 
-	return !isnothing(σ[label])
-end
-
-"""
-	trace(A::Automaton, label, σ)
-Return `τ` if `(σ, label, τ)` is in `A`, otherwise return nothing.
-"""
-function trace(A::Automaton, label, σ) 
-	if hasedge(A, σ, label)
-		return σ[label]
-	end 
-end
-
-"""
-	trace(A::Automaton, w::AbstractVector{<:Integer} [, σ=initial(A)])
-Return a pair `(l, τ)`, where 
- * `l` is the length of the longest prefix of `w` which defines a path starting at `σ` in `A` and
- * `τ` is the last state (node) on the path.
-"""
-function trace(A::Automaton, w::AbstractVector, σ=initial(A))
-	for (i, l) in enumerate(w)
-		hasedge(A, σ, l) ? σ = trace(A, l, σ) : (return i-1, σ)
-	end
-	return length(w), σ
-end
 
 
 function direct_edges!(idxA::IndexAutomaton, rwrules)
