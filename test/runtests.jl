@@ -10,6 +10,7 @@ include("presentation.jl")
 include("rewriting.jl")
 include("IndexAutomaton.jl")
 include("CosetAutomaton.jl")
+include("ReidemeisterSchreier.jl")
 
 include("tietze_transformations.jl") 
 include("substring_search.jl")
