@@ -54,10 +54,10 @@ function substring_search(w::MyWord, v::MyWord; fast=false)
             m, m_begin_ww, m_begin_vv = maximal_matching_string(x, y, ww, vv, length(w), length(v))
 
             # visualization of the match
-            @info "x:$x, y:$y"
-            @info "vv: $(MyWord(vv[1:m_begin_vv-1])) ⋅ $m ⋅ $(MyWord(vv[m_begin_vv+length(m):end]))"
-            str = i<3 ? "ww" : "WW"
-            @info "$str: $(MyWord(ww[1:m_begin_ww-1])) ⋅ $m ⋅ $(MyWord(ww[m_begin_ww+length(m):length(ww)]))"
+            #@info "x:$x, y:$y"
+            #@info "vv: $(MyWord(vv[1:m_begin_vv-1])) ⋅ $m ⋅ $(MyWord(vv[m_begin_vv+length(m):end]))"
+            #str = i<3 ? "ww" : "WW"
+            #@info "$str: $(MyWord(ww[1:m_begin_ww-1])) ⋅ $m ⋅ $(MyWord(ww[m_begin_ww+length(m):length(ww)]))"
             
             if length(m) > halflen(w)
                 #@info "↑ a match ↑"

@@ -144,31 +144,3 @@ function knuthbendix(R::RewritingSystem; maxrules = 100)
     end
     return reduce(rws)
 end
-
-"""
-function knuthbendix_always_reduced(R::RewritingSystem; maxrules=100, N=20)
-    stack = []
-    for r in rwrules(R)
-        push!(stack, r)
-    end
-    rws = empty(R)
-    append!(rws, stack)
-
-    for (i, r₁) in enumerate(active_rwrules(rws))
-        for (j,r₂) in enumerate(active_rwrules(rws))
-            if length(rws.rwrules) > maxrules
-                @warn "Maximum number of rules has been exceeded. Try running knuthbendix with larger maxrules kwarg"
-                return rws
-            end
-            #@info (i,j)
-            resolve_overlaps!(rws, r₁, r₂)
-            r₁ == r₂ && break
-            isactive() || continue
-            isactive() || break
-            resolve_overlaps!(rws, r₂, r₁)
-        end
-    end
-    delete inactive rules from rws
-    return reduce(rws)
-end
-"""

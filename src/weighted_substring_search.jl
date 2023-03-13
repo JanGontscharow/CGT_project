@@ -46,10 +46,10 @@ function weighted_substring_search(w::MyWord, v::MyWord, wt; fast=false)
             m, m_begin_ww, m_begin_vv = maximal_matching_string(x, y, ww, vv, length(w), length(v))
             
             # visualization of the match
-            @info "x:$x, y:$y"
-            @info "vv: $(MyWord(vv[1:m_begin_vv-1])) ⋅ $m ⋅ $(MyWord(vv[m_begin_vv+length(m):end]))"
-            str = i<3 ? "ww" : "WW" 
-            @info "$str: $(MyWord(ww[1:m_begin_ww-1])) ⋅ $m ⋅ $(MyWord(ww[m_begin_ww+length(m):end]))"
+            #@info "x:$x, y:$y"
+            #@info "vv: $(MyWord(vv[1:m_begin_vv-1])) ⋅ $m ⋅ $(MyWord(vv[m_begin_vv+length(m):end]))"
+            #str = i<3 ? "ww" : "WW" 
+            #@info "$str: $(MyWord(ww[1:m_begin_ww-1])) ⋅ $m ⋅ $(MyWord(ww[m_begin_ww+length(m):end]))"
             
             if weight(wt, m) > halfweight(wt, w)
                 fast && return m  # return first match that is heavy enough

@@ -1,9 +1,10 @@
 
-
-# normal form for presentations
-# Presentation always has generators 1:degree
-# relators are sorted in ascending order
-# relators are freely reduced and cylicylly reduced
+"""
+Presentation with three invariants
+1. Presentation has always generators from 1:n
+2. relators are non-trivial and in ascending order
+3. relators are cyliclly reduced
+"""
 
 mutable struct Presentation
     degree::Int
@@ -39,6 +40,7 @@ function setdeg!(Π::Presentation, deg::Int)
     Π.degree = deg
 end
 
+free_rewrite(w::MyWord) = free_rewrite!(one(w), w)
 function free_rewrite!(out::MyWord, w::MyWord)
     resize!(out, 0)
     for l in w
@@ -54,7 +56,7 @@ function free_rewrite!(out::MyWord, w::MyWord)
 end
 
 """
-    Let w=uvu^-1 be freely reduced where u is choosen with maximal length
+    Let w = uvu^-1 be freely reduced where u is choosen with maximal length
     then we have ww = uvvu^-1. In particular we can obtain x := uv and
     y := vu^-1, which lets us compute v via freely reducing yx = vuu^-1v  
 """
