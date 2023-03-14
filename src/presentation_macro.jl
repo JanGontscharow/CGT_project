@@ -1,7 +1,7 @@
 
 
 function parse_degree(str::String)
-    pattern = r"[a-z](\,\s?[a-z])*\s?\|"
+    pattern = r"[a-zA-Z](\,\s?[a-zA-Z])*\s?\|"
     mat = match(pattern, str)
     isnothing(mat) && return nothing
     mat = filter(isletter, mat.match)

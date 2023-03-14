@@ -108,11 +108,6 @@ function Base.show(io::IO, w::MyWord)
         print(io, "ε")
     else
         for (n, run) in run_decomposition(w)
-            #if run == 1 && n > 0
-            #    print(io, int_to_char(n))
-            #else
-            #    print(io, int_to_char(abs(n)), "^", sign(n)*run)
-            #end
             if run == 1
                 print(io, int_to_char(n))
             else
@@ -123,9 +118,18 @@ function Base.show(io::IO, w::MyWord)
 end
 digit_to_exp = Dict(1=>'¹', 2=>'²', 3=>'³', 4=>'⁴', 5=>'⁵', 6=>'⁶', 7=>'⁷', 8=>'⁸', 9=>'⁹',
 -1=>'¹', -2=>'²', -3=>'³', -4=>'⁴', -5=>'⁵', -6=>'⁶', -7=>'⁷', -8=>'⁸', -9=>'⁹', 0=>'⁰')
+digit_to_subscript = Dict(1=>'₁', 2=>'₂', 3=>'₃', 4=>'₄', 5=>'₅', 6=>'₆', 7=>'₇', 8=>'₈', 9=>'₉', 0=>'₀',
+-1=>'₁', -2=>'₂', -3=>'₃', -4=>'₄', -5=>'₅', -6=>'₆', -7=>'₇', -8=>'₈', -9=>'₉')
+
 function int_to_exp(n::Int)
     n == 0 && return ""
     exp = [digit_to_exp[d] for d in reverse(digits(n))]
     #n < 0 && pushfirst!(exp, '⁻')
     return join(exp)
+end
+
+function int_to_subscript(n::Int)
+    n == 0 && return ""
+    subscript = [digit_to_subscript[d] for d in reverse(digits(n))]
+    return join(subscript)
 end
