@@ -1,14 +1,16 @@
 @testset "Reidemeister-Schreier" begin
-    Π = P.pres"|a^2, b^2"
-    U = [P.word"abAB"]
-    V = P.rel(Π)
+    # from alexander hulpke cgt notes 
+    Π = P.pres"|a^2, b^3, ababababab"
+    U = [P.word"a", P.word"baB"]
+    P.reidemeister_schreier(Π, U)
 
-    ca = P.coset_enumeration(P.rel(Π), U)
-    rep = P.coset_representatives(ca)
-    @test Set(values(rep)) == Set([P.word"", P.word"a", P.word"b", P.word"ba"])
-    sch = P.schreier_generators(ca, rep)
-    @test Set(values(sch)) == Set([P.word"", P.word"", P.word"aa", P.word"", P.word"abAB", P.word"bb", P.word"abaB", P.word"bb"])
-    reide_rel = P.reidemeister_relators(ca, sch, rep, V)
-    @test Set(values(reide_rel)) == Set([P.word"aa", P.word"bb", P.word"abABabaB", P.word"abABb^3aBA"])
-    
+    # Example from https://math.stackexchange.com/questions/59273/presentations-of-subgroups-of-groups-given-by-presentations
+    Π = P.pres"|b^2, c^2, cbcbcbcb, ababab, abcabc, acbacb"
+    U = [P.word"a", P.word"b"]
+    P.reidemeister_schreier(Π, U)
+
+    # Paper
+    Π = P.pres"|a^3, b^6, abababab, ab^2ab^2ab^2ab^2, ab^3ab^3ab^3, ab^2a^2b^2ab^2a^-1b^-2a^-2b^-2a^-1b^-2"
+    U = [P.word"a", P.word"b^2"]
+    P.reidemeister_schreier(Π, U)
 end

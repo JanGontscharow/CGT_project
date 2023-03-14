@@ -46,7 +46,8 @@ end
 	# example from lecture
 	U = [P.word"ab"]
 	V = [P.word"a^3", P.word"b^3", P.word"ababab", P.word"aBaBaB"]
-	ca = P.coset_enumeration(U, V)
+	ca = P.coset_enumeration(U, V, 2)
+	P.adjacency_matrix(ca)
 	@test length(P.states(ca)) == 9
 	
 	repr = [P.word"", P.word"a", P.word"A", P.word"b", P.word"ba", P.word"bA", P.word"bab", P.word"AB", P.word"Ab"]
