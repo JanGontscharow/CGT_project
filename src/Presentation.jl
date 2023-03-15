@@ -12,15 +12,20 @@ mutable struct Presentation
     
     function Presentation(deg::Int, relators::Vector{MyWord})
         @assert deg > 0 "degree must be positive"
-        if !isempty(relators)
-            @assert maximum(map(degree, relators))<=deg "degree of words must be smaller then degree of the presentation"
-        end
+        #@info "fdstreeterz $deg, $relators"
+        isempty(relators) && return new(deg, [])
+        @assert maximum(map(degree, relators))<=deg "degree of words must be smaller then degree of the presentation"
+
+        # enforce invariants
         rel = map(x -> cyclic_rewrite(x), relators)
-        rel = sort(rel, lt=lt)
+        unique!(rel)
+        sort!(rel, lt=lt)
+        isone(first(rel)) && deleteat!(rel, 1)
         new(deg, rel)
     end
 
     function Presentation(relators::Vector{MyWord})
+        @assert !isempty(relators)
         deg = maximum(map(degree, relators))
         Presentation(deg, relators)
     end
@@ -85,10 +90,20 @@ end
 
 # for adding relators
 function Base.push!(Π::Presentation, w::MyWord)
-    @assert deg(Π) >= degree(w) "degree of the word is too large"
-    push!(rel(Π), w)
-    sort!(rel(Π), lt=lt)
+    # insert according to lt
+    for (i,v) in enumerate(rel(Π))
+        lt(v, w) && continue
+        # if duplicate no insert
+        v == w || insert!(Π.relators, i, w)
+        break
+    end
 end
+# for replacing relations
+function replace_rel!(Π::Presentation, index::Int, w::MyWord)
+    deleteat!(Π.relators, index)
+    push!(Π, w)
+end
+
 
 function relabel!(Π::Presentation, s::Int, t::Int)
     @assert 0<s<=deg(Π) && 0<t<=deg(Π)

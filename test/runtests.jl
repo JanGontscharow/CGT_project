@@ -12,6 +12,7 @@ include("IndexAutomaton.jl")
 include("CosetAutomaton.jl")
 include("ReidemeisterSchreier.jl")
 
-include("tietze_transformations.jl") 
 include("substring_search.jl")
 include("weighted_substring_search.jl")
+include("tietze_transformations.jl") 
+include("my_tietze_program.jl") 

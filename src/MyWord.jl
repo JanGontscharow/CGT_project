@@ -79,9 +79,13 @@ function hasletter(w::MyWord, s::Int)
     end
     return false
 end
-function filter_letters(w::MyWord, letters::Vector{Int})
+function mod_letters!(w::MyWord, letters::Vector{Int})
+    filter!(l -> abs(l) ∉ letters, w.letters)
+end
+function mod_letters(w::MyWord, letters::Vector{Int})
     return MyWord(filter(l -> abs(l) ∉ letters, w))
 end
+
 
 function run_decomposition(w::MyWord)
     isone(w) && return nothing

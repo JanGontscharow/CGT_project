@@ -1,15 +1,17 @@
-
-
+"""
+    Strategy continously trying to apply T2 and T4 and after each change 
+    eliminate relators of length 1 and nonsquare relators of length 2 
+"""
 function my_tietze_programm!(Π::Presentation; maxrules=50)
-    eliminate_len1!(Π)
-    eliminate_len2!(Π)
     changes_made = true
     while changes_made
         changes_made = false
-        for w ∈ collect(rel(Π))
+        eliminate_len1!(Π)
+        eliminate_nonsquare_len2!(Π)
+        # T2 loop
+        for w ∈ rel(Π)
             # consider the Presentation Π_w obtained by leaving out w
-            Π_w = copy(Π)
-            filter!(v -> v != w, rel(Π_w))
+            Π_w = Presentation(deg(Π), [v for w ∈ rel(Π) if v != w])
             rws_w = RewritingSystem(Π_w) 
             R_w = knuthbendix(rws_w; maxrules=maxrules)
             isnothing(R_w) && continue
@@ -29,47 +31,50 @@ function my_tietze_programm!(Π::Presentation; maxrules=50)
     return Π
 end
 
-function eliminate_len2!(Π::Presentation)
-    isempty(rel(Π)) && return nothing # nothing to eliminate
+function eliminate_nonsquare_len2!(Π::Presentation)
+    isempty(rel(Π)) && return Π # nothing to eliminate
     @assert length(first(rel(Π))) > 1 "eliminate relators of length 1 first"
-    has_len2 = length(first(rel(Π))) == 2
-    while has_len2    
-        # cutoff relators of length 2
-        # Reduced relators of length 2 identify to generators with each other.
-        # We use MyUnionFind to identify the equivalence classes
-        cutoff = 0
-        uf = MyUnionFind(collect(gens(Π)))
+
+    # We use MyUnionFind to determine the equivalence of the generators and thier inverses
+    uf = MyUnionFind(collect(gens(Π)))
+
+    while true    
+        nonsquare_len2 = []
         for (i,w) in enumerate(rel(Π))
             length(w) > 2 && break
             s, t = w
-            myunion!(uf, s, t)
-            cutoff = i
+            myunion!(uf, s, -t)
+            s==t || push!(nonsquare_len2, i)
         end
-        deleteat!(rel(Π), 1:cutoff)
+        isempty(nonsquare_len2) && break  # nothing to eliminate
+        deleteat!(rel(Π), nonsquare_len2)
 
-        # relabel the generators in the relators with thier equivalent representatives
+        # relabel the relators according to the equivalence of generators
         dict = Dict{Int, Int}()
         for s in gens(Π)
-            uf.parent[s] == s && continue
-            dict[abs(s)] = sign(s)*uf.parent[s]
+            myfind(uf, s) == s && continue
+            dict[abs(s)] = sign(s)*myfind(uf, s)
         end
         relabel!(Π, dict)
 
-        # restore generator invariant
-        unused_gens = collect(keys(dict))
-        restore_generator_invariant!(Π, unused_gens)
+        # restore invariants except generator invariant
+        restore_reduced_invariant!(Π)
+        restore_nontrivial_invariant!(Π)
 
-        # restore cyclic-reduced invariant
-        for (i,w) in enumerate(rel(Π)) 
-            rel(Π)[i] = cyclic_rewrite(w)
-        end
-        sort!(rel(Π))
-
+        # eliminate relators of length 1
         eliminate_len1!(Π)
-        isempty(rel(Π)) && break # nothing more to eliminate
-        has_len2 = length(first(rel(Π))) <= 2
+
+        # nothing more to eliminate
+        isempty(rel(Π)) && break
     end     
+
+    unused_gens = [s for s in gens(Π) if s != myfind(uf, s)]
+    restore_generator_invariant!(Π, unused_gens)
+    return Π
 end
+
+
+
 
 struct MyUnionFind
     parent::Dict{Int, Int}
@@ -82,55 +87,65 @@ function MyUnionFind(generators::Vector{Int})
     end
     return MyUnionFind(parent)
 end
-function myfind!(uf::MyUnionFind, s::Int)
-    uf.parent[s] == s && return s
-    uf.parent[s] = myfind!(uf, uf.parent[s])
-    return uf.parent[s]
+function myfind(uf::MyUnionFind, s::Int)
+    uf.parent[s] == s ? (return s) : return myfind(uf, uf.parent[s])
 end
 function myunion!(uf::MyUnionFind, s::Int, t::Int)
-    s = myfind!(uf, s)
-    t = myfind!(uf, t)
-    s == t && return nothing
-    # choose the generator that is smallest in absolute value as representative
-    # note that s and t cannot be inverses of each other since s*t would be trivial 
-    s, t = abs(s) > abs(t) ? (s, t) : (t, s)
-    uf.parent[s] = t
-    uf.parent[-s] = -t # we keep the equivalence classes symmetric
+    s = myfind(uf, s)
+    t = myfind(uf, t)
+    s == t && return
+    if s == -t
+        # choose the positiv generator as representative
+        uf.parent[-abs(s)] = abs(s)
+    else
+        # choose the generator of smaller absolute value as representative.
+        s, t = abs(s) > abs(t) ? (s, t) : (t, s)
+        uf.parent[s] = t
+        # keep the equivalence classes symmetric.
+        uf.parent[-s] = -t
+    end
 end
 
+
+
+
 function eliminate_len1!(Π::Presentation)
-    isempty(rel(Π)) && return nothing # nothing to eliminate
-    
+    isempty(rel(Π)) && return Π # nothing to eliminate
+
     has_len1 = length(first(rel(Π))) == 1
     trivial_gens = Int[]
+
     while has_len1
+
         # cutoff relators of length less than 1 and store trivial relators in stack
         stack = Int[]
         cutoff = 0
         for (i,w) in enumerate(rel(Π))
             length(w) > 1 && break
-            cutoff = i
-            length(w) == 0 && continue
             s = abs(first(w))
             push!(stack, s)
+            cutoff = i
         end
         deleteat!(rel(Π), 1:cutoff)
-        
+
         # remember which generators to remove 
         append!(trivial_gens, stack)
 
-        # remove generators in stack form relations and simplify
-        for (i,w) in enumerate(rel(Π))
-            cyclic_rewrite!(rel(Π)[i], filter_letters(w, stack))
-        end
+        # remove trivial generators from relators 
+        map!(w -> mod_letters(w, stack), rel(Π), rel(Π))
+
+        # restore invariants except generator invariant
+        sort!(rel(Π), lt=lt)
+        restore_reduced_invariant!(Π)
+
+        restore_nontrivial_invariant!(Π)    
 
         isempty(rel(Π)) && break
-        
-        sort!(rel(Π), lt=lt)
-        has_len1 = length(first(rel(Π))) <= 1
+        has_len1 = length(first(rel(Π))) == 1
     end
     # Fill holes left by the trivial generators to restore the Presentation invariants.
     restore_generator_invariant!(Π, trivial_gens)
+    return Π
 end
 
 # Fill holes left by the unused generators to restore the generator invariant of Presentations.
@@ -148,4 +163,35 @@ function restore_generator_invariant!(Π::Presentation, unused_gens::Vector{Int}
     end
     relabel!(Π, dict)
     decdeg!(Π, number_of_holes)
+end
+
+# Assumes Presentation is sorted
+function restore_reduced_invariant!(Π::Presentation)
+    for (i,w) ∈ enumerate(rel(Π))
+        w == cyclic_rewrite(w) && continue
+        w = cyclic_rewrite(w)
+        """
+            we cannot use replace_rel! since (in the case of a duplicate) it changes the length of
+            the relator-array and thus influences the indices of the relators which occur at 
+            [i+1:length(rel(Π))] in the original relator-arry
+        """
+        deleteat!(rel(Π), i)
+        # insert the reduced w according to lt 
+        for (j,v) in enumerate(rel(Π))
+            lt(v, w) && continue
+            insert!(Π.relators, j, w) 
+            break
+        end
+    end
+end
+
+function restore_nontrivial_invariant!(Π::Presentation)
+    #cutoff = 0
+    #for (i,w) ∈ enumerate(rel(Π))
+    #    !isone(w) && break
+    #    cutoff = i
+    #end
+    #unique!(Π.relators)
+    unique!(Π.relators)
+    isone(first(rel(Π))) && deleteat!(Π.relators, 1)
 end
