@@ -1,18 +1,3 @@
-function havas!(Π::Presentation)
-    eliminate_len1!(Π)
-    eliminate_len2!(Π)
-    changes_made = true
-    while changes_made
-        changes_made = false
-
-        for (i,w) ∈ enumerate(collect(rel(Π)))
-            for v ∈ collect(rel(Π))[i+1:end]
-                match = find_long_matching_substring(w, v)
-            end
-        end
-    end
-end
-
 
 
 function my_tietze_programm!(Π::Presentation; maxrules=50)
@@ -21,7 +6,6 @@ function my_tietze_programm!(Π::Presentation; maxrules=50)
     changes_made = true
     while changes_made
         changes_made = false
-
         for w ∈ collect(rel(Π))
             # consider the Presentation Π_w obtained by leaving out w
             Π_w = copy(Π)
@@ -33,8 +17,7 @@ function my_tietze_programm!(Π::Presentation; maxrules=50)
             changes_made = t2!(Π, w, R_w)
             changes_made && break
         end
-
-        # try to apply T4
+        # try appyling T4
         for s in gens(Π)
             if t4_check(Π, s)
                 t4!(Π, s)
@@ -43,6 +26,7 @@ function my_tietze_programm!(Π::Presentation; maxrules=50)
             end
         end
     end
+    return Π
 end
 
 function eliminate_len2!(Π::Presentation)
@@ -51,7 +35,8 @@ function eliminate_len2!(Π::Presentation)
     has_len2 = length(first(rel(Π))) == 2
     while has_len2    
         # cutoff relators of length 2
-        # Since reduced relators of length 2 identify to generators with each other we can use UnionFind to identify the equivalence classes
+        # Reduced relators of length 2 identify to generators with each other.
+        # We use MyUnionFind to identify the equivalence classes
         cutoff = 0
         uf = MyUnionFind(collect(gens(Π)))
         for (i,w) in enumerate(rel(Π))

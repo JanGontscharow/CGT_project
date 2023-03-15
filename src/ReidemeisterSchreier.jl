@@ -1,9 +1,10 @@
 S = State{UInt32, UInt32}
 
-function coset_representatives(ca::CosetAutomaton; info=false)
+function coset_representatives(ca::CosetAutomaton)
     n = input_size(ca)
     α = initial(ca)
     rep = Dict{State, MyWord}()
+    # breadth first search
     visited = Dict()
     for σ ∈ states(ca)
         visited[σ] = false
@@ -11,7 +12,6 @@ function coset_representatives(ca::CosetAutomaton; info=false)
     visited[α] = true
     queue = [α]
     rep[α] = word""
-    
     while !isempty(queue)
         info && @info "$(length(queue))"
         σ = pop!(queue)
@@ -23,63 +23,10 @@ function coset_representatives(ca::CosetAutomaton; info=false)
             end 
         end
     end
-
-    @assert is_connected(ca)
-    @assert all([σ ∈ keys(rep) for σ ∈ states(ca)]) "not all states reached $(adjacency_matrix(ca))"
-
     return rep
 end
 
-
-function adjacency_matrix(ca::CosetAutomaton; info=false)
-    n = length(ca.states)
-    m = input_size(ca)
-    adj = zeros(Bool, n, n)
-    for i in 1:n
-        for l in 1:m
-            
-            info && @info "$i $(index_to_letter(ca, l)) edge?"
-
-            if hasedge(ca, ca.states[i], l)
-                τ = ca.states[i][l]
-                j = findfirst(x -> x==τ, states(ca))
-                @assert !isnothing(τ)
-                @assert !isnothing(j)
-                info && @info "found $i $(index_to_letter(ca, l)) $j"
-                
-                adj[i,j] = true
-            end
-        end
-    end
-
-    
-    print("    ")
-    for i in 1:n
-        print(lpad(string(i),3))
-    end
-    println()
-
-    # Print matrix rows
-    for i in 1:n
-        print(lpad(string(i),3), " ")
-        for j in 1:n
-            if adj[i, j]
-                print("  1")
-            else
-                print("   ")
-            end
-        end
-        println()
-       
-    end 
-    println()
-    
-    @assert all([adj[i,j] == adj[j,i] for i in 1:n, j in 1:n]) "no longer symmetric"
-
-end
-
-
-function schreier_generators(ca::CosetAutomaton, rep; info=false)
+function schreier_generators(ca::CosetAutomaton, rep)
     deg = div(input_size(ca), 2)
     sch_dict = Dict{Tuple{State, Int}, MyWord}()
     for σ ∈ states(ca), i in 1:deg
@@ -96,35 +43,27 @@ end
 function reidemeister_rewrite(ca, sch::Dict{Tuple{State, Int}, MyWord}, w::MyWord)
     v = word""
     for (i,l) in enumerate(w) 
-        #@info "     $(MyWord(l)) trace(w[1:$(l<0 ? i : i-1)]) = trace($(MyWord(w[ (l<0 ? (1:i) : (1:i-1)) ]))) $(l<0 ? trace(ca, w[1:i])[1] : trace(ca, w[1:i-1])[1])"
         σ = l<0 ? trace(ca, MyWord(w[1:i]))[2] : trace(ca, MyWord(w[1:i-1]))[2]
         v *= l<0 ? inv(sch[(σ, -l)]) : sch[(σ, l)]
-        #@info "     $v"
     end
     return v
 end
 
-function reidemeister_relators(ca::CosetAutomaton, sch_dict::Dict{Tuple{State, Int}, MyWord}, rep::Dict{State, MyWord}, V::Vector{MyWord}; info=false)
-    reidemeister_relator = Dict{Tuple{State, MyWord}, MyWord}()
+function reidemeister_relators(ca::CosetAutomaton, sch_dict::Dict{Tuple{State, Int}, MyWord}, rep::Dict{State, MyWord}, V::Vector{MyWord})
     # get the schreier elements
     schreier = unique(values(sch_dict))
     filter!(x->!isone(x), schreier)
-    # map them onto generators
+
+    # define a mapping onto generators
     sch_gen = Dict{MyWord, MyWord}(s => MyWord(i) for (i,s) ∈ enumerate(schreier))
     sch_gen[word""] = word""
     sch = Dict{Tuple{State, Int}, MyWord}(key => sch_gen[sch_dict[key]] for key in keys(sch_dict))
-    
-    info && @info "$sch_gen"
-    info && @info "$sch"
 
     relators = MyWord[]
     for σ ∈ states(ca), v ∈ V
         value = rep[σ] * v * inv(rep[σ])
         value = free_rewrite(value)
         push!(relators, reidemeister_rewrite(ca, sch, value))
-
-        info && @info "$(rep[σ]) ⋅ $v ⋅ $(inv(rep[σ])) = $value"
-        info && @info "→ $(reidemeister_rewrite(ca, sch, value))"
     end
     return relators
 end
