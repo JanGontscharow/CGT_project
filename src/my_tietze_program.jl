@@ -1,17 +1,23 @@
+
+
 """
-    Strategy continously trying to apply T2 and T4 and after each change 
-    eliminate relators of length 1 and nonsquare relators of length 2 
+    Strategy: try to apply T2 and T4 
+    After each change eliminate relators of length 1 and nonsquare relators of length 2 
 """
 function my_tietze_programm!(Π::Presentation; maxrules=50)
     changes_made = true
+    iter=0
+    t4s=0
     while changes_made
+        iter+=1
+        @assert iter < 200 "$t4s"
         changes_made = false
         eliminate_len1!(Π)
         eliminate_nonsquare_len2!(Π)
         # T2 loop
         for w ∈ rel(Π)
             # consider the Presentation Π_w obtained by leaving out w
-            Π_w = Presentation(deg(Π), [v for w ∈ rel(Π) if v != w])
+            Π_w = Presentation(deg(Π), [v for v ∈ rel(Π) if v != w])
             rws_w = RewritingSystem(Π_w) 
             R_w = knuthbendix(rws_w; maxrules=maxrules)
             isnothing(R_w) && continue
@@ -19,17 +25,21 @@ function my_tietze_programm!(Π::Presentation; maxrules=50)
             changes_made = t2!(Π, w, R_w)
             changes_made && break
         end
-        # try appyling T4
+        # try applyling T4
         for s in gens(Π)
             if t4_check(Π, s)
-                t4!(Π, s)
-                changes_made = true
+                t4s+=1
+                t4!(Π, s, check=false)
+                #changes_made = true
                 break
             end
         end
     end
     return Π
 end
+
+
+
 
 function eliminate_nonsquare_len2!(Π::Presentation)
     isempty(rel(Π)) && return Π # nothing to eliminate
@@ -58,7 +68,9 @@ function eliminate_nonsquare_len2!(Π::Presentation)
         relabel!(Π, dict)
 
         # restore invariants except generator invariant
-        restore_reduced_invariant!(Π)
+        #restore_reduced_invariant!(Π)
+        map!(w -> cyclic_rewrite(w), rel(Π), rel(Π))
+        sort!(rel(Π), lt=lt)
         restore_nontrivial_invariant!(Π)
 
         # eliminate relators of length 1
@@ -107,16 +119,12 @@ function myunion!(uf::MyUnionFind, s::Int, t::Int)
 end
 
 
-
-
 function eliminate_len1!(Π::Presentation)
     isempty(rel(Π)) && return Π # nothing to eliminate
 
     has_len1 = length(first(rel(Π))) == 1
     trivial_gens = Int[]
-
     while has_len1
-
         # cutoff relators of length less than 1 and store trivial relators in stack
         stack = Int[]
         cutoff = 0
@@ -127,19 +135,17 @@ function eliminate_len1!(Π::Presentation)
             cutoff = i
         end
         deleteat!(rel(Π), 1:cutoff)
-
         # remember which generators to remove 
         append!(trivial_gens, stack)
 
         # remove trivial generators from relators 
         map!(w -> mod_letters(w, stack), rel(Π), rel(Π))
-
         # restore invariants except generator invariant
         sort!(rel(Π), lt=lt)
-        restore_reduced_invariant!(Π)
-
+        #restore_reduced_invariant!(Π)
+        map!(w -> cyclic_rewrite(w), rel(Π), rel(Π))
+        sort!(rel(Π), lt=lt)
         restore_nontrivial_invariant!(Π)    
-
         isempty(rel(Π)) && break
         has_len1 = length(first(rel(Π))) == 1
     end
@@ -165,33 +171,18 @@ function restore_generator_invariant!(Π::Presentation, unused_gens::Vector{Int}
     decdeg!(Π, number_of_holes)
 end
 
-# Assumes Presentation is sorted
-function restore_reduced_invariant!(Π::Presentation)
+# assumes Presentation to be sorted by lt
+function restore_reduced_invariant!(Π::Presentation; lt=lt)
     for (i,w) ∈ enumerate(rel(Π))
         w == cyclic_rewrite(w) && continue
         w = cyclic_rewrite(w)
-        """
-            we cannot use replace_rel! since (in the case of a duplicate) it changes the length of
-            the relator-array and thus influences the indices of the relators which occur at 
-            [i+1:length(rel(Π))] in the original relator-arry
-        """
-        deleteat!(rel(Π), i)
-        # insert the reduced w according to lt 
-        for (j,v) in enumerate(rel(Π))
-            lt(v, w) && continue
-            insert!(Π.relators, j, w) 
-            break
-        end
+        replace_rel!(Π, i, w, duplicates=true, lt=lt) # breaks uniqueness
     end
 end
 
+# assumes trivial words are at the bottom
 function restore_nontrivial_invariant!(Π::Presentation)
-    #cutoff = 0
-    #for (i,w) ∈ enumerate(rel(Π))
-    #    !isone(w) && break
-    #    cutoff = i
-    #end
-    #unique!(Π.relators)
-    unique!(Π.relators)
-    isone(first(rel(Π))) && deleteat!(Π.relators, 1)
+    isempty(rel(Π)) && return
+    unique!(rel(Π))
+    isone(first(rel(Π))) && deleteat!(rel(Π), 1)
 end
