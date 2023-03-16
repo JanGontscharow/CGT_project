@@ -13,7 +13,6 @@ function coset_representatives(ca::CosetAutomaton)
     queue = [α]
     rep[α] = word""
     while !isempty(queue)
-        info && @info "$(length(queue))"
         σ = pop!(queue)
         for i in 1:n
             if hasedge(ca, σ, i) 
@@ -34,10 +33,19 @@ function schreier_generators(ca::CosetAutomaton, rep)
         c = rep[σ]
         rep_cs = rep[trace(ca, c*s)[2]]
         value = c * s * inv(rep_cs)
-        info && @info "$i| $s ⋅ $c ⋅ $(inv(rep_cs)) == $(free_rewrite(value))"
         sch_dict[(σ, i)] = free_rewrite(value)
     end
-    return sch_dict
+    
+    # get the elements
+    schreier = unique(values(sch_dict))
+    filter!(x->!isone(x), schreier)
+
+    # define a mapping onto generators
+    sch_gen = Dict{MyWord, MyWord}(s => MyWord(i) for (i,s) ∈ enumerate(schreier))
+    sch_gen[word""] = word""
+    sch = Dict{Tuple{State, Int}, MyWord}(key => sch_gen[sch_dict[key]] for key in keys(sch_dict))
+
+    return (schreier, sch)
 end
 
 function reidemeister_rewrite(ca, sch::Dict{Tuple{State, Int}, MyWord}, w::MyWord)
@@ -49,15 +57,7 @@ function reidemeister_rewrite(ca, sch::Dict{Tuple{State, Int}, MyWord}, w::MyWor
     return v
 end
 
-function reidemeister_relators(ca::CosetAutomaton, sch_dict::Dict{Tuple{State, Int}, MyWord}, rep::Dict{State, MyWord}, V::Vector{MyWord})
-    # get the schreier elements
-    schreier = unique(values(sch_dict))
-    filter!(x->!isone(x), schreier)
-
-    # define a mapping onto generators
-    sch_gen = Dict{MyWord, MyWord}(s => MyWord(i) for (i,s) ∈ enumerate(schreier))
-    sch_gen[word""] = word""
-    sch = Dict{Tuple{State, Int}, MyWord}(key => sch_gen[sch_dict[key]] for key in keys(sch_dict))
+function reidemeister_relators(ca::CosetAutomaton, sch::Dict{Tuple{State, Int}, MyWord}, rep::Dict{State, MyWord}, V::Vector{MyWord})
 
     relators = MyWord[]
     for σ ∈ states(ca), v ∈ V
@@ -71,13 +71,12 @@ end
 
 function reidemeister_schreier(Π::Presentation, U::Vector{MyWord}; info=false)
     V = rel(Π)
-    ca = coset_enumeration(U, V, deg(Π), info=info)
-    info && adjacency_matrix(ca)
+    ca = coset_enumeration(U, V, deg(Π))
 
     rep = coset_representatives(ca)
     info && @info "$(values(rep))"
 
-    sch = schreier_generators(ca, rep)
+    schreier, sch = schreier_generators(ca, rep)
     info && @info "$(values(sch))"
 
     reide_rel = reidemeister_relators(ca, sch, rep, V)
