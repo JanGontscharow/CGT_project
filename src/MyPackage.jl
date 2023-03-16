@@ -25,6 +25,7 @@ include("tietze_transformations.jl")
 include("substring_search.jl")
 include("weighted_substring_search.jl")
 include("my_tietze_program.jl")
+include("tietze_programs.jl")
 include("ReidemeisterSchreier.jl")
 include("comparisons.jl")
 
