@@ -40,8 +40,8 @@ gens(Π::Presentation) = 1:deg(Π)
 decdeg!(Π::Presentation) = decdeg!(Π, 1)
 decdeg!(Π::Presentation, n::Int) = setdeg!(Π, deg(Π)-n)
 function setdeg!(Π::Presentation, deg::Int)
-    isempty(rel(Π)) || @assert maximum(map(degree, rel(Π))) <= deg "degree of relators must be less or equal to the degree"
-    isempty(rel(Π)) && @assert 0 < deg "degree of relators must be less or equal to the degree"
+    #isempty(rel(Π)) || @assert maximum(map(degree, rel(Π))) <= deg "degree of relators must be less or equal to the degree"
+    @assert 0 < deg "degree must be positive $deg, $Π"
     Π.degree = deg
 end
 
@@ -49,7 +49,7 @@ free_rewrite(w::MyWord) = free_rewrite!(one(w), w)
 function free_rewrite!(out::MyWord, w::MyWord)
     resize!(out, 0)
     for l in w
-        if isone(out)
+        if length(out)==0
             push!(out, l)
         elseif last(out) == -l
             resize!(out, length(out) - 1)
@@ -59,6 +59,7 @@ function free_rewrite!(out::MyWord, w::MyWord)
     end
     return out
 end
+
 
 """
     Let w = uvu^-1 be freely reduced where u is choosen with maximal length
@@ -88,20 +89,22 @@ function Base.show(io::IO, Π::Presentation)
     print(io, ">")
 end
 
-# for adding relators
-function Base.push!(Π::Presentation, w::MyWord)
+# for adding relators in a sorted manner
+function Base.push!(Π::Presentation, w::MyWord; duplicates=false, lt=lt)
     # insert according to lt
     for (i,v) in enumerate(rel(Π))
         lt(v, w) && continue
         # if duplicate no insert
-        v == w || insert!(Π.relators, i, w)
-        break
+        (v == w && duplicates) || insert!(Π.relators, i, w)
+        return
     end
+    # biggest relators
+    push!(rel(Π), w) 
 end
 # for replacing relations
-function replace_rel!(Π::Presentation, index::Int, w::MyWord)
+function replace_rel!(Π::Presentation, index::Int, w::MyWord; duplicates=false, lt=lt)
     deleteat!(Π.relators, index)
-    push!(Π, w)
+    push!(Π, w, lt=lt)
 end
 
 
