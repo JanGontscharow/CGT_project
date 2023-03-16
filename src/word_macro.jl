@@ -28,15 +28,24 @@ julia> degree(w)
 # syllables referring to a letter to a power
 function parse_syllables(str::AbstractString)
     # match letter with opotional exponent
-    pattern = r"([a-zA-Z])(\^\-?\d+)?"
+    pattern = r"([a-zA-Z])((\^\-?\d+)|([¹²³⁴⁵⁶⁷⁸⁹⁰]+))?"
     return eachmatch(pattern, str)
+    #r"([a-zA-Z])(\^\-?\d+)?"
 end
+
+#exp_to_base = Dict('¹'=>'1', '²'=>'2', '³'=>'3', '⁴'=>'4', '⁵'=>'5', '⁶'=>'6', '⁷'=>'7', '⁸'=>'8', '⁹'=>'9', '⁰'=>'0', '⁻'=>'-')
+exp_to_base = Dict('¹'=>1, '²'=>2, '³'=>3, '⁴'=>4, '⁵'=>5, '⁶'=>6, '⁷'=>7, '⁸'=>8, '⁹'=>9, '⁰'=>9)
+
 
 function parse_pairs(syllables)
     pairs = []
     for syllable in syllables
         gen, exp = syllable.captures
-        exp = isnothing(exp) ? 1 : parse(Int, exp[2:end])
+        if isnothing(exp)
+            exp = 1
+        else
+            exp = (exp[1] == '^') ? parse(Int, exp[2:end]) :  parse(Int, join([string(exp_to_base[x]) for x in exp]))
+        end
         gen = char_to_int(gen[1])
         iszero(exp) || push!(pairs, (gen, exp))
     end
