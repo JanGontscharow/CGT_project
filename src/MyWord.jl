@@ -86,7 +86,8 @@ function mod_letters(w::MyWord, letters::Vector{Int})
     return MyWord(filter(l -> abs(l) ∉ letters, w))
 end
 
-
+# for showing words
+# computes the "run" of each letter in the word
 function run_decomposition(w::MyWord)
     isone(w) && return nothing
     length(w)==1 && return [(w[1], 1)]
@@ -105,7 +106,6 @@ function run_decomposition(w::MyWord)
     Base.push!(runs, (l̃, run))
     return runs
 end
-
 
 function Base.show(io::IO, w::MyWord)
     if isone(w)

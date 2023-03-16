@@ -8,11 +8,11 @@
         @test P.substring_search(w, v) == P.weighted_substring_search(w, v, P.weights())
     end
 
-    n, l, m = 50, 20, 10
+    n, l, m = 100, 20, 100
 
     for _ in 1:n
         w = P.MyWord(rand(1:2, l))
-        v = P.MyWord(rand(1:2, l+10))
+        v = P.MyWord(rand(1:2, l+m))
         @test P.substring_search(w, v) == P.weighted_substring_search(w, v, P.weights())
     end
 

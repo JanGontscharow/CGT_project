@@ -131,9 +131,7 @@ function knuthbendix(R::RewritingSystem; maxrules = 100)
     for (i, r₁) in enumerate(rwrules(rws))
         for (j,r₂) in enumerate(rwrules(rws))
 			if length(rws.rwrules) > maxrules
-                #@warn "Maximum number of rules has been exceeded. Try running knuthbendix with larger maxrules kwarg"
-				#return rws
-                @info "knuth-bendix exceeded maximum number ($maxrules) of rules for the RewritingSystem:\n $(rwrules(R))"
+                #@info "knuth-bendix exceeded maximum number ($maxrules) of rules for the RewritingSystem"
                 return nothing
             end
 			#@info (i,j)
