@@ -15,7 +15,7 @@ halflen(w::MyWord) = div(length(w),2)
 
 """
 function substring_search(w::MyWord, v::MyWord; fast=false)
-    @assert length(w) <= length(v)
+    @assert length(w) <= length(v) "w=$w must be shorter or equal to v=$v"
     # long match has to contain either l_1 or l_half or thier inverses
     l_first, l_half = w[1], w[halflen(w)+length(w)%2]
     candidates1 = findall(isequal(l_first), v)
@@ -73,6 +73,7 @@ end
 
 
 function maximal_matching_string(x::Int, y::Int, ww::MyWord, vv::MyWord, len_w, len_v)
+    @assert len_w <= len_v "w must be less or equal than v, $len_w $len_v"
     # center ww at x for matching
     circshift!(ww, x-1)
     # center vv at y for matching 

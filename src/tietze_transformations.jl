@@ -44,8 +44,8 @@ function t3!(Π::Presentation, w::MyWord)
 end
 
 # Tietze-transfomtaion corresponding to removing a generator
-function t4!(Π::Presentation, s::Int)
-    @assert t4_check(Π, s) "generator must occur less than once all relators"
+function t4!(Π::Presentation, s::Int; check::Bool=true)
+    check && @assert t4_check(Π, s) "generator must occur less than once all relators"
     # remove all relators in which s occurs
     filter!(w -> !hasletter(w,s), rel(Π))
     # swap s and the last generator
@@ -55,7 +55,10 @@ function t4!(Π::Presentation, s::Int)
 end
 function t4_check(Π::Presentation, s::Int)
     @assert abs(s) <= deg(Π) "must be a generator of the presentation"
-    return all([count(==(s), abs(w)) < 2 for w ∈ rel(Π)])
+    # s must occur one or less times in all relators
+    all([count(==(s), abs(w)) < 2 for w ∈ rel(Π)]) || return false
+    # s must occur in at least one relations
+    return any([s ∈ abs(w) for w ∈ rel(Π)])
 end
 
 
