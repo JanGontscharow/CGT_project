@@ -12,7 +12,7 @@ mutable struct Presentation
     
     function Presentation(deg::Int, relators::Vector{MyWord})
         @assert deg > 0 "degree must be positive"
-        #@info "fdstreeterz $deg, $relators"
+        #@info " $deg, $relators"
         isempty(relators) && return new(deg, [])
         @assert maximum(map(degree, relators))<=deg "degree of words must be smaller then degree of the presentation"
 

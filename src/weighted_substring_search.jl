@@ -1,5 +1,7 @@
-weights() = t -> 1
-weights(s::Int) = t -> t==s ? 100 : 1
+# example weight
+weights() = t -> 1 # trivial weights
+weights(s::Int) = t -> t==s ? 100 : 1 # point weights
+
 # return the total weight according to the weigths wt
 weight(wt, w::MyWord) = sum(map(wt, abs(w)))
 lt(wt) = (x, y) -> weight(wt, x) < weight(wt, y)
